@@ -12,7 +12,7 @@ def onCall(token):
 
 def action(token, commmands):
     uri = url + "/action"
-    return requests.post(uri, headers={'X-Auth-Token':token}, json={"commands": commmands}).json
+    return requests.post(uri, headers={'X-Auth-Token':token}, json={"commands": commmands}).json()
 
 def create_command(e_id, command, c_id):
     return {"elevator_id": e_id, "command": command, "call_ids": c_id}
@@ -48,7 +48,7 @@ def is_top(calls, passengers, floor):
         return False
 
 def is_bottom(calls, passengers, floor):
-    bottom = 100000
+    bottom = 100
     for call in calls:
         bottom = min(bottom, call['start'])
     for passenger in passengers:
@@ -68,6 +68,7 @@ def simulator():
     token = token["token"]
 
     before_status = ['stop', 'stop', 'stop', 'stop']
+    action(token, [create_command_noCall(0,'STOP')])
     while True:
         res = onCall(token)
 
@@ -87,31 +88,26 @@ def simulator():
             if status == "STOPPED":
                 if is_open(calls, passengers, floor, before_status[e_id]):
                     commands.append(create_command_noCall(e_id, 'OPEN'))
-                elif is_top(calls, passengers, floor) or before_status[e_id] == 'down':
+                elif is_top(calls, passengers, floor) or (before_status[e_id] == 'down' and not is_bottom(calls, passengers, floor)):
                     commands.append(create_command_noCall(e_id, 'DOWN'))
                     before_status[e_id] = 'down'
-                elif is_bottom(calls, passengers, floor) or before_status[e_id] == 'up':
+                elif is_bottom(calls, passengers, floor) or (before_status[e_id] == 'up' and not is_top(calls, passengers, floor)):
                     commands.append(create_command_noCall(e_id, 'UP'))
                     before_status[e_id] = 'up'
                 else:
                     commands.append(create_command_noCall(e_id, 'STOP'))
-                    before_status[e_id] = 'stop'
 
             elif status == "UPWARD":
                 if is_open(calls, passengers, floor, before_status[e_id]):
                     commands.append(create_command_noCall(e_id, 'STOP'))
-                    before_status[e_id] = 'stop'
                 else:
                     commands.append(create_command_noCall(e_id, 'UP'))
-                    before_status[e_id] = 'up'
 
             elif status == "DOWNWARD":
                 if is_open(calls, passengers, floor, before_status[e_id]):
                     commands.append(create_command_noCall(e_id, 'STOP'))
-                    before_status[e_id] = 'stop'
                 else:
                     commands.append(create_command_noCall(e_id, 'DOWN'))
-                    before_status[e_id] = 'down'
 
             elif status == "OPENED":
                 enters = []
