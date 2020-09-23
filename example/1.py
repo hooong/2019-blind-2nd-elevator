@@ -62,13 +62,13 @@ def is_bottom(calls, passengers, floor):
 def simulator():
     user = 'tester'
     problem = 0
-    count = 1
+    count = 3
 
     token = start(user, problem, count)
     token = token["token"]
 
+    visit_call = [False] * 500
     before_status = ['stop', 'stop', 'stop', 'stop']
-    action(token, [create_command_noCall(0,'STOP')])
     while True:
         res = onCall(token)
 
@@ -110,21 +110,27 @@ def simulator():
                     commands.append(create_command_noCall(e_id, 'DOWN'))
 
             elif status == "OPENED":
-                enters = []
                 exits = []
-                for call in calls:
-                    if call['start'] == floor:
-                        enters.append(call['id'])
                 for passenger in passengers:
                     if passenger['end'] == floor:
                         exits.append(passenger['id'])
-
-                if enters:
-                    commands.append(create_command(e_id, 'ENTER', enters))
-                elif exits:
+                
+                if exits:
                     commands.append(create_command(e_id, 'EXIT', exits))
                 else:
-                    commands.append(create_command_noCall(e_id, 'CLOSE'))
+                    enters = []
+                    p_count = len(passengers)
+                    r_count = 0
+                    for call in calls:
+                        if call['start'] == floor and p_count < 8 and not visit_call[call['id']] and r_count < 2:
+                            enters.append(call['id'])
+                            visit_call[call['id']] = True
+                            p_count += 1
+                            r_count += 1
+                    if enters:
+                        commands.append(create_command(e_id, 'ENTER', enters))
+                    else:
+                        commands.append(create_command_noCall(e_id, 'CLOSE'))
 
         action(token, commands)
         
