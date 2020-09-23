@@ -28,7 +28,7 @@ def p0_simulator():
     token = ret['token']
     print('Token for %s is %s' % (user, token))
 
-    oncalls(token)
+    print(oncalls(token))
     action(token, [{'elevator_id': 0, 'command': 'UP'}, {'elevator_id': 1, 'command': 'STOP'}])
 
     oncalls(token)
